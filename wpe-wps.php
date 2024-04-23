@@ -2,7 +2,6 @@
 /**
  * @link              https://spacesengine.com
  * @since             1.0.0
- * @package           WPE_WPS
  *
  * @wordpress-plugin
  *
@@ -12,7 +11,6 @@
  * Author:      Spaces Engine
  * Author URI:  https://spacesengine.com/
  * Version:     1.0.0
- * Text Domain: wpe-wps
  * Domain Path: /languages/
  * License:     GPLv2 or later (license.txt)
  */
@@ -29,8 +27,8 @@ define( 'WPE_WPS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
  * Start the engines, Captain...
  */
 function wpe_wps_run() {
-	$plugin = new \SpacesEngine\WPE_WPS();
-	$plugin->run();
+	require_once WPE_WPS_PLUGIN_PATH . 'includes/classes/class-spaces-engine.php';
+	$plugin = new \SpacesEngine\Spaces_Engine();
 }
 add_action( 'bp_include', 'wpe_wps_run' );
 
