@@ -9,7 +9,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Easily create business profiles for BuddyPress and BuddyBoss.
 
-= Documentation =
+== Documentation ==
 
 - [Tutorials](https://spacesengine.com/docs/)
 
