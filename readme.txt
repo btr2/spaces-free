@@ -26,7 +26,7 @@ To run Spaces Engine, we recommend your host supports:
 1. Visit 'Plugins > Add New'
 2. Click 'Upload Plugin'
 3. Upload the plugin file
-4. Activate 'Spaces for BuddyBoss' from your Plugins page.
+4. Activate 'Spaces Engine' from your Plugins page.
 
 == Changelog ==
 
