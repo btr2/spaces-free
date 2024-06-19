@@ -39,24 +39,24 @@ function get_slug() {
  * @return mixed|void
  */
 function get_primary_nav() {
-	global $wp_rewrite;
-	$wp_rewrite->flush_rules();
-
-	$endpoints = array(
-		'about' => 'about',
-	);
-
 	$items = array(
 		'home'  => esc_html__( 'Home', 'wpe-wps' ),
 		'about' => esc_html__( 'About', 'wpe-wps' ),
 	);
 
-	// Remove missing endpoints.
-	foreach ( $endpoints as $endpoint_id => $endpoint ) {
-		if ( empty( $endpoint ) ) {
-			unset( $items[ $endpoint_id ] );
-		}
-	}
+	return apply_filters( 'spaces_engine_get_primary_nav', $items );
+}
 
-	return apply_filters( 'spaces_engine_get_primary_nav', $items, $endpoints );
+function default_cover_image( $echo = false ) {
+	$cover_image = WPE_WPS_PLUGIN_URL . 'assets/images/cover.jpg';
+
+	if ( ! $echo ) {
+		?>
+
+		<img src="<?php echo esc_url( $cover_image ); ?>" alt="Space Cover Image">
+
+		<?php
+	} else {
+		return $cover_image;
+	}
 }

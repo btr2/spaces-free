@@ -22,16 +22,8 @@ class Spaces_Engine_Public {
 	 * Define the public-facing functionality of the plugin.
 	 */
 	public function __construct() {
-		$this->load_dependencies();
 		$this->init();
 	}
-
-	/**
-	 * Load our dependencies.
-	 *
-	 * @return void
-	 */
-	public function load_dependencies() {}
 
 	/**
 	 * We use an init function to decouple our hooks.
@@ -39,41 +31,27 @@ class Spaces_Engine_Public {
 	 * @return void
 	 */
 	public function init() {
-		add_action( 'init', array( $this, 'add_endpoints' ) );
+		add_action( 'init', array( $this, 'rewrites' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'frontend_scripts' ) );
 
-		add_filter( 'archive_template', array( $this, 'archive_template' ), 10, 3 );
-		add_filter( 'single_template', array( $this, 'single_template' ), 99, 3 );
+		add_filter( 'template_include', array( $this, 'filter_template' ) );
 
 		if ( ! is_admin() ) {
 			add_filter( 'query_vars', array( $this, 'add_query_vars' ) );
 		}
 	}
 
-	/**
-	 * Add endpoints for query vars.
-	 */
-	public function add_endpoints() {
-		foreach ( $this->get_query_vars() as $key => $var ) {
-			if ( ! empty( $var ) ) {
-				add_rewrite_endpoint( $var, EP_PAGES | EP_PERMALINK );
-			}
-		}
-	}
+	public function frontend_scripts() {
+		wp_enqueue_style( 'spaces-engine-main', WPE_WPS_PLUGIN_URL . 'assets/css/main.css', array(), WPE_WPS_PLUGIN_VERSION );
+		wp_enqueue_script( 'spaces-engine-main', WPE_WPS_PLUGIN_URL . 'assets/js/main.js', array( 'jquery' ), WPE_WPS_PLUGIN_VERSION, true );
 
-	/**
-	 * Get query current active query var.
-	 *
-	 * @return string
-	 */
-	public function get_current_endpoint() {
-		global $wp;
-
-		foreach ( $this->get_query_vars() as $key => $value ) {
-			if ( isset( $wp->query_vars[ $key ] ) ) {
-				return $key;
-			}
-		}
-		return '';
+		wp_localize_script(
+			'spaces-engine-main',
+			'spaces_engine_main',
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			)
+		);
 	}
 
 	/**
@@ -83,78 +61,76 @@ class Spaces_Engine_Public {
 	 * @return array
 	 */
 	public function add_query_vars( $vars ) {
-		foreach ( $this->get_query_vars() as $key => $var ) {
-			$vars[] = $key;
-		}
+		/** Add a query var for our Space Creation Page */
+		$vars[] = 'create-' . strtolower( get_singular_label() ) . '-page';
 
 		return $vars;
 	}
 
 	/**
-	 * Get query vars.
-	 *
-	 * @return array
+	 * Custom rewrite rules.
 	 */
-	public function get_query_vars() {
+	public function rewrites() {
+		$create_space_string = 'create-' . strtolower( get_singular_label() ) . '-page';
+		$slug                = get_slug();
 
-		$space_item = get_primary_nav();
-		$query_vars = array();
-		foreach ( $space_item as $item_key => $value ) {
-			$query_vars[ $item_key ] = $item_key;
+		add_rewrite_rule( "^{$slug}/{$create_space_string}", 'index.php?post_type=wpe_wpspace&' . $create_space_string . '=true', 'top' );
+
+		if ( ! get_option( 'wpe_wps_permalinks_flushed' ) ) {
+			flush_rewrite_rules( false );
+			update_option( 'wpe_wps_permalinks_flushed', 1 );
 		}
-		return apply_filters( 'spaces_engine_get_query_vars', array_merge( $this->query_vars, $query_vars ) );
 	}
 
 	/**
-	 * The function will return the archive page template.
+	 * Our template includes function.
 	 *
-	 * @param string $archive_template Archive page template path.
-	 * @since    1.0.0
+	 * @param $template
+	 *
+	 * @return mixed|string
 	 */
-	public function archive_template( $archive_template, $type, $templates ) {
-		global $wpdb, $wp_query, $post;
+	public function filter_template( $template ) {
+		$create_space_string = 'create-' . strtolower( get_singular_label() ) . '-page';
 
-		if ( is_archive() && ( 'wpe_wpspace' === get_post_type() || 'wpe_wpspace' === $wp_query->query_vars['post_type'] ) ) {
+		if ( 'wpe_wpspace' === get_query_var( 'post_type' ) ) {
+			if ( get_query_var( $create_space_string ) ) {
+				// Regardless of other privacy settings, you must be logged in to create a Space
+				if ( ! is_user_logged_in() ) {
+					wp_safe_redirect( home_url( '/' ) );
+					exit;
+				}
 
-			$template = '/spaces/archive-' . $wp_query->query_vars['post_type'] . '.php';
+				// checks if the file exists in the theme first, otherwise serve the file from the plugin
+				$theme_file = locate_template( 'spacesengine/create.php' );
 
-			if ( file_exists( get_stylesheet_directory() . '/' . $template ) ) {
-				$archive_template = get_stylesheet_directory() . '/' . $template;
-			} elseif ( file_exists( get_template_directory() . '/' . $template ) ) {
-				$archive_template = get_template_directory() . '/' . $template;
-			} else {
-				$archive_template = WPE_WPS_PLUGIN_DIR . '/templates/archive-wpe_wpspace.php';
+				if ( $theme_file ) {
+					$template = $theme_file;
+				} else {
+					$template = WPE_WPS_PLUGIN_DIR . '/templates/create.php';
+				}
+
+				return $template;
+			}
+
+			if ( is_single() ) {
+				$theme_file = locate_template( 'spacesengine/single.php' );
+
+				if ( $theme_file ) {
+					$template = $theme_file;
+				} else {
+					$template = WPE_WPS_PLUGIN_DIR . '/templates/single.php';
+				}
+			} elseif ( is_archive() ) {
+				$theme_file = locate_template( 'spacesengine/archive.php' );
+
+				if ( $theme_file ) {
+					$template = $theme_file;
+				} else {
+					$template = WPE_WPS_PLUGIN_DIR . '/templates/archive.php';
+				}
 			}
 		}
 
-		return $archive_template;
-	}
-
-
-	/**
-	 * The function will return the single business template.
-	 *
-	 * @param string $single_template single page template path.
-	 * @since    1.0.0
-	 */
-	public function single_template( $single_template, $type, $templates ) {
-		global $wpdb, $wp_query, $post;
-
-		if ( is_single() && ( 'wpe_wpspace' === get_post_type() || 'wpe_wpspace' === $wp_query->query_vars['post_type'] ) ) {
-
-			/* return false when rtmedia plugin is active and media open from single business tab*/
-			add_filter( 'rtmedia_return_is_template', '__return_false' );
-
-			$template = '/spaces/single-' . $wp_query->query_vars['post_type'] . '.php';
-
-			if ( file_exists( get_stylesheet_directory() . '/' . $template ) ) {
-				$single_template = get_stylesheet_directory() . '/' . $template;
-			} elseif ( file_exists( get_template_directory() . '/' . $template ) ) {
-				$single_template = get_template_directory() . '/' . $template;
-			} else {
-				$single_template = WPE_WPS_PLUGIN_DIR . '/templates/single-wpe_wpspace.php';
-			}
-		}
-		return $single_template;
+		return $template;
 	}
 }

@@ -8,8 +8,8 @@
  * Plugin Name: Spaces Engine
  * Plugin URI:  https://spacesengine.com/
  * Description: Easily create business profiles for BuddyPress and BuddyBoss.
- * Author:      Spaces Engine
- * Author URI:  https://spacesengine.com/
+ * Author:      Bouncingsprout Studio
+ * Author URI:  https://www.bouncingsprout.com/
  * Version:     1.0.0
  * Domain Path: /languages/
  * License:     GPLv2 or later (license.txt)
