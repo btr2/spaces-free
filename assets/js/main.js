@@ -2,14 +2,19 @@ jQuery(document).ready(function ($) {
     $( "body" ).on(
         "click",
         "#create-space-form #space-submit",
-        function () {
+        function (e) {
+            e.preventDefault();
             create_space( this );
             return false;
         }
     );
     function create_space(e) {
+        window.tinyMCE.triggerSave();
+
         let form = $( e ).closest('#create-space-form');
         let title    = $( form ).find('#space-name').val();
+        let description    = $( form ).find('#space-description').val();
+        let category    = $( form ).find('#wpe-wps-category-dropdown').val();
         let nonce   = $( form ).attr( "data-nonce" );
 
         $.ajax(
@@ -19,16 +24,29 @@ jQuery(document).ready(function ($) {
                 url: spaces_engine_main.ajaxurl,
                 data: {
                     title: title,
+                    description: description,
+                    category: category,
                     nonce: nonce,
                     action: "create_space",
                 },
                 success: function (response) {
                     if ( ! response.success) {
                         console.log( response );
+                        $('.bp-feedback p').text( response.data[0].message);
+                        $('.bp-feedback').removeClass('success');
+                        $('.bp-feedback').addClass('error');
+                        $('.bp-feedback').show();
                     } else {
-                        $('#space-visit').attr('href', response.data);
+                        $('.bp-feedback p').text( response.data.message);
+                        $('.bp-feedback').removeClass('error');
+                        $('.bp-feedback').addClass('success');
+                        $('#space-visit').attr('href', response.data.url);
+                        $('#create-space-form')[0].reset();
+                        $('#create-space-form :input').prop('disabled', true);
+                        tinymce.activeEditor.setMode('readonly');
+                        $('#space-submit').hide();
+                        $('.bp-feedback').show();
                         $('#create-space-result').show();
-                        $('#create-space-form').hide();
                     }
                 },
             }

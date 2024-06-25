@@ -19,7 +19,6 @@ get_header(); ?>
 					<ul class="component-navigation spaces-nav" data-nonce="<?php echo esc_attr( wp_create_nonce( 'wpe-wps-index-scope' ) ); ?>">
 						<li id="wpe-wps-index-all" class="wpe-wps-index-scope-link selected">
 							<a data-scope="all" href="">
-								<div class="bb-component-nav-item-point">
 									<?php
 									printf(
 									/* translators: %s: The plural label for a Space */
@@ -27,14 +26,12 @@ get_header(); ?>
 										esc_html( get_plural_label() ),
 									);
 									?>
-								</div>
 							</a>
 						</li>
 
 						<?php if ( is_user_logged_in() ) : ?>
 							<li id="wpe-wps-index-personal" class="wpe-wps-index-scope-link">
 								<a data-scope="personal" href="">
-									<div class="bb-component-nav-item-point">
 										<?php
 										printf(
 										/* translators: %s: The plural label for a Space */
@@ -42,7 +39,6 @@ get_header(); ?>
 											esc_html( get_plural_label() ),
 										);
 										?>
-									</div>
 								</a>
 							</li>
 
@@ -61,32 +57,61 @@ get_header(); ?>
 					</ul><!-- .component-navigation -->
 				</nav>
 
-			<div class="bp-secondary-header">
-				<div class="form-group">
-					<label for="wpe-wps-index-ordering"></label>
-					<select id="wpe-wps-index-ordering" name="wpe_wps_order_filter" data-placeholder="<?php esc_attr_e( 'Order by', 'wpe-wps' ); ?>">
-						<option value="latest"><?php esc_html_e( 'Latest', 'wpe-wps' ); ?></option>
-						<option value="alphabetical"><?php esc_html_e( 'Alphabetical', 'wpe-wps' ); ?></option>
-					</select>
-				</div>
-			</div>
+			<div id="subnav-filters" class="subnav-filters filters bp-secondary-header">
+				<div class="subnav-search clearfix">
+					<div class="dir-search space-search bp-search" data-bp-search="space">
+						<form class="bp-dir-search-form">
 
-			<div id="wpe-wps-index-main-wrapper">
+							<label for="wpe-wps-spaces-search" class="bp-screen-reader-text">
+								<?php
+								printf(
+								// translators: Placeholder %s is the plural label of the space post type.
+									esc_html__( 'Search %s', 'wpe-wps' ),
+									esc_html( get_plural_label() )
+								);
+								?>
+							</label>
+							<input
+								type="text"
+								class="input-text"
+								name="wpe_wps_spaces_search"
+								id="wpe-wps-spaces-search"
+								placeholder="<?php
+								printf(
+								// translators: Placeholder %s is the plural label of the space post type.
+									esc_html__( 'Search %s...', 'wpe-wps' ),
+									esc_html( get_plural_label() )
+								);
+								?>"
+							>
+						</form>
+						<?php
+						$cats = wp_dropdown_categories(
+							array(
+								'taxonomy'          => 'wp_space_category',
+								'hierarchical'      => 1,
+								'show_option_none'  => esc_html__( 'All Categories', 'wpe-wps' ),
+								'option_none_value' => '',
+								'name'              => 'wpe_wps_category_filter',
+								'id'                => 'wpe-wps-category-dropdown',
+								'value_field'       => 'slug',
+								'hide_empty'        => 0,
+							)
+						);
 
-					<div id="wpe-wps-index-sidebar">
-
-						<?php require WPE_WPS_PLUGIN_DIR . '/templates/parts/space-filters.php'; ?>
+						?>
 
 					</div>
 
-				<div id="wpe-wps-index-content-wrapper">
-
-					<div class="status"></div>
-					<div class="space-archive-wrapper"></div>
-
 				</div>
 
+				<select id="wpe-wps-index-ordering" name="wpe_wps_order_filter" data-placeholder="<?php esc_attr_e( 'Order by', 'wpe-wps' ); ?>">
+					<option value="latest"><?php esc_html_e( 'Latest', 'wpe-wps' ); ?></option>
+					<option value="alphabetical"><?php esc_html_e( 'Alphabetical', 'wpe-wps' ); ?></option>
+				</select>
 			</div>
+
+			<div class="space-archive-wrapper"></div>
 		</div>
 		<?php do_action( 'space_archive_end' ); ?>
 
