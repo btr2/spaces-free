@@ -116,7 +116,7 @@ function register_space_post_type() {
 				'map_meta_cap'          => true,
 				'publicly_queryable'    => true,
 				'exclude_from_search'   => false,
-				'hierarchical'          => false,
+				'hierarchical'          => true,
 				'rewrite'               => $rewrite,
 				'query_var'             => true,
 				'supports'              => array(

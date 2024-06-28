@@ -75,6 +75,20 @@ class Spaces_Engine_Public {
 			'spaces_engine_main',
 			array(
 				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'creation_steps' => get_creation_steps(),
+				'next' => esc_html__( 'Next step', 'wpe-wps' ),
+				'previous' => esc_html__( 'Previous step', 'wpe-wps' ),
+				'create' => sprintf(
+					// translators: Placeholder %s is the singular label of the space post type.
+					esc_html__( 'Create %s', 'wpe-wps' ),
+					esc_html( strtolower( get_singular_label() ) )
+				),
+				'visit' => sprintf(
+					// translators: Placeholder %s is the singular label of the space post type.
+					esc_html__( 'Visit %s', 'wpe-wps' ),
+					esc_html( strtolower( get_singular_label() ) )
+				),
+				'create_space_link' => esc_url( get_create_space_link() )
 			)
 		);
 	}
@@ -89,6 +103,9 @@ class Spaces_Engine_Public {
 		/** Add a query var for our Space Creation Page */
 		$vars[] = 'create-' . strtolower( get_singular_label() ) . '-page';
 
+		/** Add query vars for each menu item and creation step */
+		$vars[] = 'active-space-tab';
+
 		return $vars;
 	}
 
@@ -96,14 +113,14 @@ class Spaces_Engine_Public {
 	 * Custom rewrite rules.
 	 */
 	public function rewrites() {
-		$create_space_string = 'create-' . strtolower( get_singular_label() ) . '-page';
+		$create_space_string = get_create_space_string();
 		$slug                = get_slug();
 
 		add_rewrite_rule( "^{$slug}/{$create_space_string}", 'index.php?post_type=wpe_wpspace&' . $create_space_string . '=true', 'top' );
+		$navs = get_primary_nav();
 
-		if ( ! get_option( 'wpe_wps_permalinks_flushed' ) ) {
-			flush_rewrite_rules( false );
-			update_option( 'wpe_wps_permalinks_flushed', 1 );
+		foreach ( $navs as $nav => $value ) {
+			add_rewrite_rule( "^{$slug}/([^/]*)/{$nav}", 'index.php?post_type=wpe_wpspace&name=$matches[1]&active-space-tab=' . $nav, 'top' );
 		}
 	}
 
@@ -116,7 +133,7 @@ class Spaces_Engine_Public {
 	 */
 	public function filter_template( $template ) {
 		buddypress()->current_component = 'activity';
-		$create_space_string = 'create-' . strtolower( get_singular_label() ) . '-page';
+		$create_space_string = get_create_space_string();
 
 		if ( 'wpe_wpspace' === get_query_var( 'post_type' ) ) {
 			if ( get_query_var( $create_space_string ) ) {
@@ -140,8 +157,8 @@ class Spaces_Engine_Public {
 
 			if ( is_single() ) {
 				/* We need to force our single template to be part of the activity component, to receive the needed scripts */
-				buddypress()->current_component = 'activity';
-				add_filter( 'bp_current_component', function () {return 'activity';} );
+				// buddypress()->current_component = 'activity';
+				// add_filter( 'bp_current_component', function () {return 'activity';} );
 				$theme_file = locate_template( 'spacesengine/single.php' );
 
 				if ( $theme_file ) {

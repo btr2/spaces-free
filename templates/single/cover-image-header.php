@@ -27,13 +27,3 @@ $cover_image = default_cover_image( true );
 	</div><!-- .container -->
 
 </div><!-- #cover-image-container -->
-
-<?php if ( get_the_content() ) : ?>
-	<div class="container">
-		<div class="desc-wrap">
-			<div class="space-description">
-				<?php echo wp_kses_post( get_the_content() ); ?>
-			</div><!-- //.space-description -->
-		</div>
-	</div>
-<?php endif; ?>

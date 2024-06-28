@@ -2,16 +2,26 @@
 
 namespace SpacesEngine;
 
+$step = get_query_var( 'creation-step' );
+
 get_header(); ?>
 
 	<div class="buddypress-wrap">
-		<div id="create-space-form-wrapper">
+		<div id="create-space-form-wrapper" data-current="details">
 
 			<?php if ( is_user_logged_in() ) : ?>
 
 			<div class="item-body" id="create-space-body">
 
 				<form action="" method="post" id="create-space-form" enctype="multipart/form-data" data-nonce="<?php echo esc_attr( wp_create_nonce( 'create_space' ) ); ?>">
+					<nav class="<?php bp_nouveau_groups_create_steps_classes(); ?>" id="space-create-tabs" role="navigation" aria-label="<?php esc_attr_e( 'space creation menu', 'bp-business-profile' ); ?>">
+						<ol class="space-create-buttons button-tabs">
+
+							<?php wp_kses_post( get_creation_step_tabs() ); ?>
+
+						</ol>
+					</nav>
+
 					<h3 class="bp-screen-title">
 					<?php
 						printf(
@@ -61,36 +71,16 @@ get_header(); ?>
 
 						?>
 					</div>
-
-					<div class="form-group">
-						<aside style="display: none" class="bp-feedback bp-messages bp-template-notice">
-							<span class="bp-icon" aria-hidden="true"></span>
-							<p></p>
-						</aside>
-						<?php
-						$submit_value = sprintf(
-						// translators: Placeholder %s is the singular label of the space post type.
-							__( 'Create %s', 'wpe-wps' ),
-							get_singular_label()
-						);
-						?>
-						<input id="space-submit" type="submit" name="space_submit" value="<?php echo esc_attr( $submit_value ); ?>">
-					</div>
 				</form><!-- #create-space-form -->
 
-				<div id="create-space-result" style="display: none">
+				<div class="create-space-navigation">
+					<aside style="display: none" class="bp-feedback bp-messages bp-template-notice">
+						<span class="bp-icon" aria-hidden="true"></span>
+						<p></p>
+					</aside>
 
-				<a id="space-visit"><button type="submit" class="primary">
-				<?php
-				printf(
-						// translators: Placeholder %s is the singular label of the space post type.
-					esc_html__( 'Visit %s', 'wpe-wps' ),
-					esc_html( get_singular_label() )
-				);
-				?>
-						</button></a>
+					<?php wp_kses_post( get_creation_step_buttons() ); ?>
 				</div>
-
 		</div><!-- .item-body -->
 			<?php else : ?>
 				<div class="logged-out-message">

@@ -1,13 +1,92 @@
 jQuery(document).ready(function ($) {
-    $( "body" ).on(
-        "click",
-        "#create-space-form #space-submit",
-        function (e) {
-            e.preventDefault();
-            create_space( this );
-            return false;
+
+
+    if ( $('#create-space-form-wrapper').length ) {
+        const steps = Object.keys(spaces_engine_main.creation_steps);
+        function update_create_space_screen( current, action ) {
+
+            let first_step = steps[0];
+            let last_step = steps[steps.length - 1];
+
+            let wrapper = $('#create-space-form-wrapper');
+
+            let form = wrapper.find('#create-space-form');
+            let start_button = wrapper.find('.prev-next .start');
+            let end_button = wrapper.find('.prev-next .end');
+
+            console.log(current);
+            console.log(action);
+            $('.space-create-buttons li').removeClass('current');
+
+            if ( 'forward' === action ) {
+                wrapper.attr('data-current', getNext(current))
+                // new_step = getNext(current)
+            } else if ( 'back' === action ) {
+                wrapper.attr('data-current', getPrev(current))
+                // new_step = getPrev(current)
+            } else if ( 'create' === action ) {
+                start_button.hide();
+            }
+
+
+            let active = $('.space-create-buttons').find("[data-id='" + wrapper.attr('data-current') + "']").addClass('current');
+
+            console.log(active);
+            // let current = wrapper.attr('data-current');
+            if ( wrapper.attr('data-current') === first_step ) {
+                start_button.hide();
+                end_button.removeClass('final');
+            } else if ( wrapper.attr('data-current') === last_step ) {
+                start_button.text(spaces_engine_main.previous);
+                end_button.text(spaces_engine_main.create);
+                end_button.addClass('final');
+            } else {
+                start_button.show();
+                end_button.text(spaces_engine_main.next);
+                end_button.removeClass('final');
+            }
         }
-    );
+
+        const getPrev = (current) => {
+            let index = steps.indexOf(current);
+            const prev = steps[index - 1]
+            if (!prev) {
+                return undefined
+            }
+
+            return prev;
+        }
+        const getNext = (current) => {
+            index = steps.indexOf(current)
+            const next = steps[index + 1]
+            if (!next) {
+                return undefined
+            }
+
+            return next;
+        }
+
+
+        $( "body" ).on(
+            "click",
+            '#create-space-form-wrapper .prev-next button',
+            function (e) {
+
+
+                if ($(this).hasClass('final')) {
+                    let current = $('#create-space-form-wrapper').attr('data-current');
+                    update_create_space_screen( current, 'create' );
+                    create_space( this );
+                } else {
+                    let current = $('#create-space-form-wrapper').attr('data-current');
+                    let action = $(this).attr('data-action');
+                    update_create_space_screen( current, action );
+                }
+            }
+        );
+
+    }
+
     function create_space(e) {
         window.tinyMCE.triggerSave();
 

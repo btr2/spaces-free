@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return void
  */
 function create_space() {
-	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'create_space' ) ) {
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'XXXXcreate_space' ) ) {
 		$error = new \WP_Error(
 			'Failed security check while creating the Space',
 			esc_html__( 'We ran into a problem...', 'wpe-wps' )
@@ -56,7 +56,7 @@ function create_space() {
 		'post_title'   => sanitize_text_field( $title ),
 		'post_type'    => 'wpe_wpspace',
 		'post_status'  => 'publish',
-		'post_content' => wp_kses_post( $description ),
+		'post_content' => wp_kses_post( wpautop( $description ) ),
 	);
 
 	$id = wp_insert_post( $args );
@@ -247,4 +247,75 @@ function paginate( $max_num_pages, $paged ) {
 
 		<?php
 	endif;
+}
+
+function upload_space_avatar() {
+	check_ajax_referer( 'bp-business-profile-nonce', 'nonce' );
+
+	if ( isset( $_POST['business_id'] ) && $_POST['business_id'] ) {
+
+		if ( isset( $_FILES['business_avatar_image'] ) && ! empty( $_FILES['business_avatar_image'] ) ) {
+			$parent_post_id = $_POST['business_id'];
+			// These files need to be included as dependencies when on the front end.
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+
+			// Let WordPress handle the upload.
+			// Remember, 'my_image_upload' is the name of our file input in our form above.
+			$attachment_id = media_handle_upload( 'business_avatar_image', $parent_post_id );
+			if ( ! is_wp_error( $attachment_id ) ) {
+				/* Get the existing avatar  */
+				$_business_avatar_image = get_post_meta( $parent_post_id, '_business_avatar_image', true );
+				if ( $_business_avatar_image != '' ) {
+					/* Delete the existing avatar  */
+					wp_delete_attachment( $_business_avatar_image, true );
+				}
+				/* Update the new avatar  */
+				update_post_meta( $parent_post_id, '_business_avatar_image', $attachment_id );
+			}
+			$attachment = wp_get_attachment_image( $attachment_id );
+			$result     = array(
+				'url' => $attachment,
+			);
+		}
+	}
+
+	wp_send_json_success( $result );
+}
+function upload_space_cover() {
+	check_ajax_referer( 'bp-business-profile-nonce', 'nonce' );
+
+	if ( isset( $_POST['business_id'] ) && $_POST['business_id'] ) {
+
+		if ( isset( $_FILES['business_cover_image'] ) && ! empty( $_FILES['business_cover_image'] ) ) {
+			$parent_post_id = $_POST['business_id'];
+			// These files need to be included as dependencies when on the front end.
+			require_once ABSPATH . 'wp-admin/includes/image.php';
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			require_once ABSPATH . 'wp-admin/includes/media.php';
+
+			// Let WordPress handle the upload.
+			// Remember, 'my_image_upload' is the name of our file input in our form above.
+			$attachment_id = media_handle_upload( 'business_cover_image', $parent_post_id );
+			if ( ! is_wp_error( $attachment_id ) ) {
+				/* Get the existing cover image  */
+				$_business_cover_image = get_post_meta( $parent_post_id, '_business_cover_image', true );
+				if ( $_business_cover_image != '' ) {
+					/* Delete the existing cover image  */
+					wp_delete_attachment( $_business_cover_image, true );
+				}
+				/* Update the new cover image  */
+				update_post_meta( $parent_post_id, '_business_cover_image', $attachment_id );
+				set_post_thumbnail( $parent_post_id, $attachment_id );
+			}
+			$attachment = wp_get_attachment_image_src( $attachment_id, 'full' );
+			$result     = array(
+				'name' => basename( $attachment['0'] ),
+				'url'  => $attachment['0'],
+			);
+		}
+	}
+
+	wp_send_json_success( $result );
 }
